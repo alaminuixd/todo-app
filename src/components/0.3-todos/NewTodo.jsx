@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { v4 as uuidv4 } from "uuid";
 import styles from "./NewTodo.module.css";
@@ -10,6 +10,28 @@ const NewTodo = ({ oneNewTodo }) => {
   });
   const [err, setErr] = useState(null);
   const [success, setSuccess] = useState(false);
+  const timeoutRef = useRef(null);
+  useEffect(() => {
+    if (err) {
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      // Set a new timeout to clear the error after 2 seconds
+      timeoutRef.current = setTimeout(() => {
+        setErr(null);
+        timeoutRef.current = null; // Reset the ref
+      }, 2000);
+    }
+
+    // Cleanup function to clear the timeout if the component unmounts
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [err]);
 
   // handler functions
   const handleInputChange = (e) => {
@@ -43,15 +65,6 @@ const NewTodo = ({ oneNewTodo }) => {
     setErr(null);
     console.log(typeof oneNewTodo);
   };
-  useEffect(() => {
-    if (err) {
-      // Only set timeout if there is an error
-      const errorTimer = setTimeout(() => {
-        setErr(null);
-      }, 2000);
-      return () => clearTimeout(errorTimer); // Cleanup on unmount or before re-running
-    }
-  }, [err]);
   return (
     <form onSubmit={handleSubmit}>
       <input
